@@ -28,21 +28,10 @@ CFLAGS += $(if $(findstring Windows,$(detected_OS)),-D WIN32,\
 			$(if $(findstring Haiku,$(detected_OS)),-D Haiku))))))))
 
 linux_build:
-	@$(CC) $(CFLAGS) -o $(LINUX_OUTPUT) $(FILES_LIST)
+	$(CC) $(CFLAGS) -o $(LINUX_OUTPUT) $(FILES_LIST)
 
 windows_build:
-	@$(WINCC) $(CFLAGS) -o $(WINDOWS_OUTPUT) $(FILES_LIST)
-
-all:
-	@echo Detected OS: $(detected_OS)
-	ifeq ($(detected_OS), Linux) then \
-		echo "Compiling for Linux and Windows..."; \
-		$(MAKE) linux_build; \
-		$(MAKE) windows_build; \
-	else \
-		echo "Compiling for $(detected_OS)..."; \
-		$(MAKE) windows_build; \
-	fi
+	$(WINCC) $(CFLAGS) -o $(WINDOWS_OUTPUT) $(FILES_LIST)
 
 clean:
 	@echo Detected OS: $(detected_OS)
@@ -50,5 +39,17 @@ ifeq ($(detected_OS),Windows)
 	pwsh -Command "if (Test-Path $(WINDOWS_OUTPUT)) { Remove-Item $(WINDOWS_OUTPUT) -Force }"
 else
 	@$(LINUX_REMOVE) $(LINUX_OUTPUT) 2>/dev/null || true
-	@$(WIN_REMOVE) $(WINDOWS_OUTPUT) 2>/dev/null || true
+	@$(LINUX_REMOVE) $(WINDOWS_OUTPUT) 2>/dev/null || true
 endif
+
+g:
+	echo Detected OS: $(detected_OS)
+ifeq ($(detected_OS), Windows)
+	echo "Compiling for $(detected_OS)..."
+	$(MAKE) windows_build
+else
+	echo "Compiling for Linux and Windows..."
+	$(MAKE) $(linux_build)
+	$(MAKE) windows_build
+endif
+
